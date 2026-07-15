@@ -4,7 +4,7 @@ Reproducibility package for the analysis reported in:
 
 > Secular Trends in Child Stunting and Policy Attribution Under Ethiopia's One WASH National Programme: A Six-Round Generalised Intensity Difference-in-Differences Analysis, 2000-2024. Submitted to *The Lancet Global Health*.
 
-This repository contains the R and Python scripts used to construct the pooled six-round analytic panel and to produce every table and figure in the manuscript and its Supplementary Appendix. It does not contain raw data (see **Data access** below). This is Paper 2 of a two-paper series; Paper 1 (zone-level water point functionality and child nutritional outcomes, 2024-25 EDHS) has its own reproducibility repository.
+This repository contains the R and Python scripts used to construct the pooled six-round analytic panel and to produce every table and figure in the manuscript and its Supplementary Appendix. It does not contain raw data (see **Data access** below). This is Paper 2 of a two-paper series; Paper 1 (zone-level water point functionality and child nutritional outcomes, 2024-25 EDHS) has its own reproducibility repository at [drcmbote/paper1-wash-functionality-ethiopia](https://github.com/drcmbote/paper1-wash-functionality-ethiopia).
 
 ## Data access
 

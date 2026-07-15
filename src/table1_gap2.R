@@ -43,14 +43,25 @@ cat(sprintf("Table 1 analytical sample: N = %d\n", N_total))
 cat("Per round:", paste(rounds, N_round, sep="=", collapse=" | "), "\n")
 
 # ---- Helper functions -------------------------------------------------------
-pct <- function(n, tot) {
-  if (tot == 0) return("—")
-  sprintf("%s (%.1f%%)", format(n, big.mark=","), 100*n/tot)
+# DHS convention: n = unweighted case count, % = DHS-weighted proportion.
+# (Previously this table reported an unweighted % despite the footnote
+# claiming "n (weighted %)"; fixed 2026-07-15 after cross-checking against
+# the DHS-weighted prevalence actually cited in Results/Abstract/Discussion.)
+wpct <- function(indicator, weight) {
+  valid <- !is.na(indicator) & !is.na(weight)
+  n <- sum(indicator[valid], na.rm = TRUE)
+  tot_w <- sum(weight[valid])
+  if (tot_w == 0) return("—")
+  w_pct <- 100 * sum(weight[valid & indicator]) / tot_w
+  sprintf("%s (%.1f%%)", format(n, big.mark=","), w_pct)
 }
-mean_sd <- function(x) {
-  x <- x[!is.na(x)]
+mean_sd <- function(x, weight) {
+  valid <- !is.na(x) & !is.na(weight)
+  x <- x[valid]; w <- weight[valid]
   if (length(x) == 0) return("—")
-  sprintf("%.1f (%.1f)", mean(x), sd(x))
+  wmean <- sum(x * w) / sum(w)
+  wsd <- sqrt(sum(w * (x - wmean)^2) / sum(w))
+  sprintf("%.1f (%.1f)", wmean, wsd)
 }
 miss_cell <- function(vec, N) {
   n_miss <- sum(is.na(vec))
@@ -85,7 +96,7 @@ rows[[1]] <- make_row(
 rows[[2]] <- make_row(
   "Child stunting (HAZ < −2)", "Yes",
   sapply(rounds, function(y) {
-    r <- rd(y); pct(sum(r$stunted_num==1, na.rm=TRUE), Nr(y))
+    r <- rd(y); wpct(r$stunted_num==1, r$child_wt)
   }),
   miss_cell(df$stunted_num, N_total)
 )
@@ -93,14 +104,14 @@ rows[[2]] <- make_row(
 # ---- 2. CHILD CHARACTERISTICS ----------------------------------------------
 rows[[3]] <- make_row(
   "Age, months — mean (SD)", "",
-  sapply(rounds, function(y) mean_sd(rd(y)$child_age_months)),
+  sapply(rounds, function(y) { r <- rd(y); mean_sd(r$child_age_months, r$child_wt) }),
   miss_cell(df$child_age_months, N_total)
 )
 
 rows[[4]] <- make_row(
   "Male sex", "Yes",
   sapply(rounds, function(y) {
-    r <- rd(y); pct(sum(r$child_sex_male_num==1, na.rm=TRUE), Nr(y))
+    r <- rd(y); wpct(r$child_sex_male_num==1, r$child_wt)
   }),
   miss_cell(df$child_sex_male_num, N_total)
 )
@@ -109,7 +120,7 @@ rows[[4]] <- make_row(
 rows[[5]] <- make_row(
   "Improved water source use", "Yes",
   sapply(rounds, function(y) {
-    r <- rd(y); pct(sum(r$edhs_improved_bin==1, na.rm=TRUE), Nr(y))
+    r <- rd(y); wpct(r$edhs_improved_bin==1, r$child_wt)
   }),
   miss_cell(df$edhs_improved_bin, N_total)
 )
@@ -123,7 +134,7 @@ for (i in seq_along(wealth_lvls)) {
     if (i==1) "Wealth quintile" else "",
     wealth_lbl[i],
     sapply(rounds, function(y) {
-      r <- rd(y); pct(sum(r$wealth_q==lvl, na.rm=TRUE), Nr(y))
+      r <- rd(y); wpct(r$wealth_q==lvl, r$child_wt)
     }),
     if (i==1) miss_cell(df$wealth_q, N_total) else ""
   )
@@ -137,7 +148,7 @@ for (i in seq_along(edu_lvls)) {
     if (i==1) "Maternal education" else "",
     lvl,
     sapply(rounds, function(y) {
-      r <- rd(y); pct(sum(r$mother_education_f==lvl, na.rm=TRUE), Nr(y))
+      r <- rd(y); wpct(r$mother_education_f==lvl, r$child_wt)
     }),
     if (i==1) miss_cell(df$mother_education_f, N_total) else ""
   )
